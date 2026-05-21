@@ -30,6 +30,47 @@
 
 ---
 
+## 기술 선택 이유
+
+### Frontend — Next.js 14 + TypeScript + Tailwind CSS
+
+| 기술 | 선택 이유 |
+|------|----------|
+| **Next.js 14** | App Router 기반 SSR/CSR 혼용이 가능해 OAuth 콜백 처리(서버)와 대시보드(클라이언트)를 같은 프레임워크 안에서 자연스럽게 분리할 수 있음. React 생태계에서 사실상 표준이 된 풀스택 프레임워크이며, Docker `output: standalone` 모드로 경량 프로덕션 이미지 생성이 쉬움 |
+| **TypeScript** | Java·Python 백엔드의 응답 스키마를 타입으로 정의해두면 API 연동 시 런타임 오류를 컴파일 단계에서 잡을 수 있음. 프로젝트 규모가 커질수록 유지보수 비용 절감 효과가 큼 |
+| **Tailwind CSS** | 클래스 기반 유틸리티 스타일링으로 별도 CSS 파일 없이 컴포넌트 안에서 디자인을 완결할 수 있어 개발 속도가 빠름. 미사용 클래스는 빌드 시 자동 제거되므로 번들 크기 최소화에도 유리함 |
+
+### Backend — Java Spring Boot (인증 서버)
+
+Java를 인증 전담 서버로 선택한 핵심 이유는 **보안과 생태계 성숙도**입니다.
+
+- **Spring Security**: OAuth 2.0 Authorization Code Flow, JWT 필터 체인, CORS 정책을 선언적 설정만으로 구성할 수 있는 가장 성숙한 보안 프레임워크. 네이버·Instagram 토큰처럼 외부 인증 흐름이 복잡할수록 검증된 라이브러리가 직접 구현보다 안전함
+- **Spring Data JPA + Hibernate**: 유저 엔티티와 소셜 토큰을 암호화 컬럼으로 안전하게 관리하면서도 ORM으로 SQL 작성 부담을 줄임
+- **JVM 안정성**: 인증 서버는 요청이 많을수록 스레드 모델이 중요한데, Spring Boot의 내장 Tomcat + JVM은 대용량 동시 인증 요청에 검증된 성능을 보임
+- **책임 분리**: 민감한 소셜 토큰(Naver Access Token, Instagram Long-lived Token)을 인증 서버에만 격리하면, Python AI 서버가 침해되어도 토큰은 Java 서버를 통해서만 조회 가능 (`X-Internal-Key` 내부 키 검증)
+
+### Backend — Python FastAPI + LangGraph (AI 서버)
+
+Python을 AI 워크플로우 서버로 선택한 핵심 이유는 **AI/ML 라이브러리 생태계**입니다.
+
+- **LangGraph**: LangGraph의 공식 메인 SDK가 Python이며, 커뮤니티 레퍼런스·문서도 Python 기준으로 작성됨. JS 버전 대비 기능 완성도와 업데이트 속도가 앞서 있어 추후 기능 확장 시 유리함
+- **Anthropic SDK (Python)**: Claude API의 공식 Python SDK가 가장 빠르게 최신 기능(Vision, Tool Use, Streaming 등)을 지원함
+- **FastAPI**: Python 웹 프레임워크 중 가장 빠른 비동기 처리 성능을 가지며, Pydantic 기반 자동 타입 검증과 OpenAPI 문서 자동 생성을 지원함. LangGraph의 `async` 노드와 자연스럽게 결합됨
+- **Pillow / 이미지 처리**: 이미지 업로드 전처리(리사이즈, 포맷 변환, base64 인코딩)에 Python 이미지 라이브러리 생태계가 압도적으로 풍부함
+
+### 왜 Java와 Python을 함께 쓰는가
+
+단일 언어(Python만 또는 Java만)로도 구현 가능하지만, 각 언어의 강점이 완전히 다른 영역에 있어 역할을 분리했습니다.
+
+```
+인증·보안·회원관리  →  Java가 더 강함  →  Java Spring Boot
+AI 워크플로우·이미지 처리  →  Python이 더 강함  →  Python FastAPI
+```
+
+두 서버는 JWT(공유 시크릿)로 사용자 인증을 공유하고, 소셜 토큰은 내부 API 키(`X-Internal-Key`)를 통해 Java→Python 단방향으로만 전달되어 보안 경계를 유지합니다.
+
+---
+
 ## LangGraph 워크플로우
 
 ```
