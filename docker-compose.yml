@@ -1,0 +1,119 @@
+version: "3.9"
+
+services:
+  # PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: bnipost-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-bnipost}
+      POSTGRES_USER: ${DB_USER:-bnipost}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bnipost}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bnipost}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: bnipost-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Java Spring Boot (Auth Server)
+  java:
+    build:
+      context: ./java-server
+      dockerfile: Dockerfile
+    container_name: bnipost-java
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-bnipost}
+      DB_USER: ${DB_USER:-bnipost}
+      DB_PASSWORD: ${DB_PASSWORD:-bnipost}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-min-32-chars}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      NAVER_REDIRECT_URI: ${NAVER_REDIRECT_URI:-http://localhost:8080/auth/naver/callback}
+      META_APP_ID: ${META_APP_ID}
+      META_APP_SECRET: ${META_APP_SECRET}
+      INSTAGRAM_REDIRECT_URI: ${INSTAGRAM_REDIRECT_URI:-http://localhost:8080/auth/instagram/callback}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-secret}
+      app.frontend-url: ${FRONTEND_URL:-http://localhost:3000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Python FastAPI + LangGraph (AI Server)
+  python:
+    build:
+      context: ./python-server
+      dockerfile: Dockerfile
+    container_name: bnipost-python
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-bnipost}:${DB_PASSWORD:-bnipost}@db:5432/${DB_NAME:-bnipost}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-min-32-chars}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-secret}
+      JAVA_SERVER_URL: http://java:8080
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      java:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bnipost-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_JAVA_URL: ${NEXT_PUBLIC_JAVA_URL:-http://localhost:8080}
+      NEXT_PUBLIC_PYTHON_URL: ${NEXT_PUBLIC_PYTHON_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      java:
+        condition: service_healthy
+      python:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
