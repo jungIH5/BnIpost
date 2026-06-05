@@ -54,7 +54,7 @@ services:
       META_APP_SECRET: ${META_APP_SECRET}
       INSTAGRAM_REDIRECT_URI: ${INSTAGRAM_REDIRECT_URI:-http://localhost:8080/auth/instagram/callback}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-secret}
-      app.frontend-url: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "8080:8080"
     depends_on:
