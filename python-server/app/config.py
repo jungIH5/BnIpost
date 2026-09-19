@@ -21,9 +21,6 @@ class Settings(BaseSettings):
     # Claude API
     anthropic_api_key: str
 
-    # Redis
-    redis_url: str = "redis://redis:6379"
-
     # Public base URL this server is reachable at (used to build image URLs
     # that Naver/Instagram's servers fetch from the public internet — must
     # be a real public domain in production, not localhost).

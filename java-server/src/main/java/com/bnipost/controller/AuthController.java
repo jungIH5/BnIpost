@@ -1,7 +1,5 @@
 package com.bnipost.controller;
 
-import com.bnipost.dto.TokenResponse;
-import com.bnipost.dto.UserProfile;
 import com.bnipost.entity.User;
 import com.bnipost.service.InstagramOAuthService;
 import com.bnipost.service.NaverOAuthService;
@@ -10,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;

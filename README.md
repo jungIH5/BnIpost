@@ -15,8 +15,8 @@
 │  :3000      ←  Boot     ←  + LangGraph      │
 │                :8080        :8000            │
 │                  ↕              ↕            │
-│           [PostgreSQL]     [Redis]           │
-│              :5432          :6379            │
+│              [PostgreSQL]                    │
+│                :5432                         │
 └─────────────────────────────────────────────┘
 ```
 
@@ -26,7 +26,6 @@
 | **Java Server** | 회원관리, OAuth | Spring Boot 3, Spring Security, JWT |
 | **Python Server** | AI 워크플로우 | FastAPI, LangGraph, Claude API |
 | **PostgreSQL** | 데이터 저장 | PostgreSQL 16 |
-| **Redis** | 캐싱 | Redis 7 |
 
 ---
 

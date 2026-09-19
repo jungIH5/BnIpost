@@ -1,6 +1,5 @@
 import base64
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 from app.auth.jwt_verify import verify_jwt

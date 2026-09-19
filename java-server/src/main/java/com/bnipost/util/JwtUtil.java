@@ -41,10 +41,6 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    public Long getUserId(String token) {
-        return Long.parseLong(parseToken(token).getSubject());
-    }
-
     public boolean validateToken(String token) {
         try {
             parseToken(token);

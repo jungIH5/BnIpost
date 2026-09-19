@@ -21,19 +21,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis
-  redis:
-    image: redis:7-alpine
-    container_name: bnipost-redis
-    restart: unless-stopped
-    ports:
-      - "6380:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
   # Java Spring Boot (Auth Server)
   java:
     build:
@@ -80,7 +67,6 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-secret}
       JAVA_SERVER_URL: http://java:8080
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      REDIS_URL: redis://redis:6379
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8001}
     ports:
       - "8001:8000"
@@ -90,8 +76,6 @@ services:
       db:
         condition: service_healthy
       java:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
