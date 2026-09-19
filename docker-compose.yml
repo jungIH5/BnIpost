@@ -14,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bnipost}"]
       interval: 10s
@@ -27,7 +27,7 @@ services:
     container_name: bnipost-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -49,14 +49,14 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-min-32-chars}
       NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
       NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
-      NAVER_REDIRECT_URI: ${NAVER_REDIRECT_URI:-http://localhost:8080/auth/naver/callback}
+      NAVER_REDIRECT_URI: ${NAVER_REDIRECT_URI:-http://localhost:8081/auth/naver/callback}
       META_APP_ID: ${META_APP_ID}
       META_APP_SECRET: ${META_APP_SECRET}
-      INSTAGRAM_REDIRECT_URI: ${INSTAGRAM_REDIRECT_URI:-http://localhost:8080/auth/instagram/callback}
+      INSTAGRAM_REDIRECT_URI: ${INSTAGRAM_REDIRECT_URI:-http://localhost:8081/auth/instagram/callback}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-secret}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -81,8 +81,11 @@ services:
       JAVA_SERVER_URL: http://java:8080
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       REDIS_URL: redis://redis:6379
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8001}
     ports:
-      - "8000:8000"
+      - "8001:8000"
+    volumes:
+      - python_uploads:/app/static/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -105,8 +108,8 @@ services:
     container_name: bnipost-frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_JAVA_URL: ${NEXT_PUBLIC_JAVA_URL:-http://localhost:8080}
-      NEXT_PUBLIC_PYTHON_URL: ${NEXT_PUBLIC_PYTHON_URL:-http://localhost:8000}
+      NEXT_PUBLIC_JAVA_URL: ${NEXT_PUBLIC_JAVA_URL:-http://localhost:8081}
+      NEXT_PUBLIC_PYTHON_URL: ${NEXT_PUBLIC_PYTHON_URL:-http://localhost:8001}
     ports:
       - "3000:3000"
     depends_on:
@@ -117,3 +120,4 @@ services:
 
 volumes:
   postgres_data:
+  python_uploads:

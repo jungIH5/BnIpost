@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://redis:6379"
 
+    # Public base URL this server is reachable at (used to build image URLs
+    # that Naver/Instagram's servers fetch from the public internet — must
+    # be a real public domain in production, not localhost).
+    public_base_url: str = "http://localhost:8001"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

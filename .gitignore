@@ -12,6 +12,7 @@ java-server/target/
 *.logs
 
 # Python
+python-server/static/uploads/
 __pycache__/
 *.py[cod]
 *.pyo

@@ -12,6 +12,7 @@ class PostState(TypedDict):
     image_mime_type: Optional[str]
 
     # Intermediate
+    image_url: Optional[str]    # public URL of the saved image, used at publish time
     image_description: Optional[str]
     generated_title: Optional[str]
     generated_content: Optional[str]

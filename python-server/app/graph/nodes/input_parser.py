@@ -1,6 +1,8 @@
+import base64
 import httpx
 from app.graph.state import PostState
 from app.config import get_settings
+from app.services.storage import save_image_and_get_url
 
 settings = get_settings()
 
@@ -11,6 +13,11 @@ async def input_parser_node(state: PostState) -> PostState:
         return {**state, "error": "키워드 또는 이미지를 입력해주세요."}
 
     input_type = "image" if state.get("image_base64") else "keyword"
+
+    image_url = None
+    if input_type == "image":
+        image_bytes = base64.b64decode(state["image_base64"])
+        image_url = save_image_and_get_url(image_bytes, state.get("image_mime_type", "image/jpeg"))
 
     # Fetch social token from Java server
     platform = state["platform"]
@@ -38,6 +45,7 @@ async def input_parser_node(state: PostState) -> PostState:
     return {
         **state,
         "input_type": input_type,
+        "image_url": image_url,
         "social_token": social_token,
         "instagram_user_id": instagram_user_id,
         "retry_count": state.get("retry_count", 0),

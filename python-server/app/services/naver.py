@@ -10,10 +10,12 @@ async def post_to_naver_blog(
     title: str,
     content: str,
     hashtags: Optional[list] = None,
+    image_url: Optional[str] = None,
 ) -> str:
     """Post content to Naver Blog. Returns the post URL."""
     hashtag_str = " ".join(f"#{tag.lstrip('#')}" for tag in (hashtags or []))
-    full_content = content + ("\n\n" + hashtag_str if hashtag_str else "")
+    image_html = f'<img src="{image_url}"><br><br>' if image_url else ""
+    full_content = image_html + content + ("\n\n" + hashtag_str if hashtag_str else "")
 
     headers = {
         "Authorization": f"Bearer {access_token}",

@@ -8,15 +8,14 @@ async def post_to_instagram(
     access_token: str,
     instagram_user_id: str,
     caption: str,
+    image_url: str,
     hashtags: Optional[list] = None,
-    image_url: Optional[str] = None,
 ) -> str:
     """
-    Post content to Instagram Business account via Graph API.
-    Returns the published post ID/URL.
+    Post an image to an Instagram Business account via Graph API.
+    Returns the published post URL.
 
-    Note: Instagram Graph API requires a public image URL for media posts.
-    For text-only posts, we use a placeholder approach.
+    Note: image_url must be publicly reachable — Instagram's servers fetch it directly.
     """
     hashtag_str = " ".join(f"#{tag.lstrip('#')}" for tag in (hashtags or []))
     full_caption = caption + ("\n\n" + hashtag_str if hashtag_str else "")
@@ -25,17 +24,9 @@ async def post_to_instagram(
         # Step 1: Create media container
         container_payload: dict = {
             "caption": full_caption,
+            "image_url": image_url,
             "access_token": access_token,
         }
-
-        if image_url:
-            container_payload["image_url"] = image_url
-            container_payload["media_type"] = "IMAGE"
-        else:
-            # Reels or carousel — for text posts use a stock image approach
-            # In production, integrate image generation (DALL-E etc.)
-            container_payload["media_type"] = "REELS"
-            container_payload["video_url"] = image_url or ""
 
         create_resp = await client.post(
             f"{INSTAGRAM_GRAPH_URL}/{instagram_user_id}/media",

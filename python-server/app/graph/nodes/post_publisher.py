@@ -18,11 +18,15 @@ async def post_publisher_node(state: PostState) -> PostState:
                 title=state.get("generated_title", ""),
                 content=state.get("generated_content", ""),
                 hashtags=state.get("generated_hashtags", []),
+                image_url=state.get("image_url"),
             )
         elif platform == "instagram":
             instagram_user_id = state.get("instagram_user_id")
             if not instagram_user_id:
                 return {**state, "error": "Instagram 사용자 ID가 없습니다."}
+
+            if not state.get("image_url"):
+                return {**state, "error": "인스타그램 게시에는 이미지가 필요합니다."}
 
             caption = f"{state.get('generated_title', '')}\n\n{state.get('generated_content', '')}"
             url = await post_to_instagram(
@@ -30,6 +34,7 @@ async def post_publisher_node(state: PostState) -> PostState:
                 instagram_user_id=instagram_user_id,
                 caption=caption,
                 hashtags=state.get("generated_hashtags", []),
+                image_url=state.get("image_url"),
             )
         else:
             return {**state, "error": f"지원하지 않는 플랫폼: {platform}"}
